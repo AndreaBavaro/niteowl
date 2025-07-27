@@ -1,103 +1,142 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { Clock, DollarSign, Users, ArrowRight } from 'lucide-react';
+import withAuth from '@/components/auth/withAuth';
+import FeaturedBars, { FeaturedBarsSkeleton } from '@/components/FeaturedBars';
+
+function HomePage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black" />
+        <div className="absolute top-20 left-1/4 w-72 h-72 bg-green-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
+      </div>
+      
+      {/* Hero Section */}
+      <div className="relative z-10">
+        <div className="container mx-auto px-4 py-20">
+          <div className="text-center max-w-5xl mx-auto">
+            <div className="mb-8 animate-slide-in-up">
+              <h1 className="text-6xl md:text-7xl font-bold mb-4">
+                <span className="bg-gradient-to-r from-white via-zinc-100 to-zinc-200 bg-clip-text text-transparent">
+                  NightOwl
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-green-400 via-green-300 to-emerald-400 bg-clip-text text-transparent animate-shimmer">
+                  TO
+                </span>
+              </h1>
+              <div className="flex justify-center mb-6">
+                <div className="w-24 h-1 bg-gradient-to-r from-green-400 to-purple-500 rounded-full" />
+              </div>
+            </div>
+            
+            <p className="text-xl md:text-2xl text-zinc-300 mb-12 leading-relaxed max-w-3xl mx-auto animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+              Your ultimate guide to Toronto's nightlife. Get <span className="text-green-400 font-semibold">real-time insights</span>, 
+              <span className="text-purple-400 font-semibold">crowd levels</span>, and <span className="text-blue-400 font-semibold">vibe checks</span> for the city's hottest spots. 
+              Own the night, every night.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
+              <Link 
+                href="/demo"
+                className="group bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-black font-bold px-10 py-4 rounded-2xl transition-all duration-300 inline-flex items-center justify-center transform hover:scale-105 hover:shadow-2xl hover:shadow-green-500/25"
+              >
+                <span className="mr-3">✨</span>
+                Try Demo Experience
+                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link 
+                href="/signup"
+                className="group bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold px-10 py-4 rounded-2xl transition-all duration-300 inline-flex items-center justify-center transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25"
+              >
+                <span className="mr-3">🚀</span>
+                Join Exclusive Beta
+              </Link>
+              <Link 
+                href="/bars"
+                className="group border-2 border-zinc-600 hover:border-zinc-400 bg-zinc-900/50 backdrop-blur-sm text-white font-bold px-10 py-4 rounded-2xl transition-all duration-300 inline-flex items-center justify-center transform hover:scale-105 hover:bg-zinc-800/50"
+              >
+                <span className="mr-3">🍻</span>
+                Browse Bars
+              </Link>
+            </div>
+            
+            {/* Floating Elements */}
+            <div className="absolute top-32 left-10 animate-float" style={{ animationDelay: '0s' }}>
+              <div className="w-4 h-4 bg-green-400/30 rounded-full blur-sm" />
+            </div>
+            <div className="absolute top-48 right-16 animate-float" style={{ animationDelay: '1s' }}>
+              <div className="w-6 h-6 bg-purple-400/30 rounded-full blur-sm" />
+            </div>
+            <div className="absolute bottom-32 left-20 animate-float" style={{ animationDelay: '2s' }}>
+              <div className="w-3 h-3 bg-blue-400/30 rounded-full blur-sm" />
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Featured Bars Section */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-white mb-2">Top Rated Bars</h2>
+            <p className="text-zinc-400">Highest rated bars based on service and experience</p>
+          </div>
+          <Link 
+            href="/bars"
+            className="text-green-400 hover:text-green-300 font-medium inline-flex items-center transition-colors"
+          >
+            View All
+            <ArrowRight className="w-4 h-4 ml-1" />
+          </Link>
+        </div>
+
+        
+      </div>
+
+      {/* Features Section */}
+      <div className="bg-zinc-900/50">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-4">Why Choose NightOwl TO?</h2>
+            <p className="text-zinc-400 text-lg">Your nocturnal companion for Toronto's best nightlife experiences</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="bg-green-400/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-8 h-8 text-green-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Real-Time Wait Times</h3>
+              <p className="text-zinc-400">Know exactly how long you'll wait before heading out</p>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-green-400/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="w-8 h-8 text-green-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Cover Charge Info</h3>
+              <p className="text-zinc-400">Budget accordingly with accurate cover charge details</p>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-green-400/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-green-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Crowd Insights</h3>
+              <p className="text-zinc-400">Find bars that match your vibe and age group</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
+export default withAuth(HomePage);

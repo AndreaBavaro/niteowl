@@ -1,4 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NightOwl TO 🦉
+
+Your nocturnal companion for Toronto's best nightlife. Get real-time insights, crowd levels, and vibe checks for the city's hottest spots.
+
+## Features
+
+- 🌃 **Real-time Nightlife Data**: Live wait times, cover charges, and crowd levels
+- 🎵 **Personalized Recommendations**: Curated suggestions based on your music taste and preferences
+- 📍 **Location-Based Insights**: Discover bars and clubs in your area
+- 🎯 **Vibe Matching**: Find venues that match your energy and style
+- 🏆 **Loyalty System**: Earn points and unlock exclusive spots
+- 📱 **Mobile-First Design**: Optimized for on-the-go nightlife planning
+
+## Tech Stack
+
+This is a [Next.js](https://nextjs.org) project built with:
+- **Next.js 15** with App Router
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Supabase** for backend and database
+- **Lucide React** for icons
 
 ## Getting Started
 

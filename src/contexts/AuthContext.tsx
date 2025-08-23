@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import getSupabaseBrowserClient from '@/lib/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { UserProfile, MusicGenre } from '@/lib/types';
+import { mockUser } from '@/lib/mock/mockUser';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -16,7 +17,7 @@ interface AuthContextType {
   verifyEmailOTP: (email: string, token: string) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<{ error?: any }>;
-  createUserPreferences: (preferences: { location_neighbourhood: string; preferred_music: MusicGenre[]; age: number }) => Promise<{ error?: any }>;
+  createUserPreferences: (preferences: { first_neighbourhood: string; second_neighbourhood?: string; third_neighbourhood?: string; preferred_music: MusicGenre[]; age: number }) => Promise<{ error?: any }>;
   updateLastActive: () => Promise<void>;
   checkPhoneStatus: (phone: string) => Promise<{ error?: any; data?: any }>;
 }
@@ -30,6 +31,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Updated fetchUserProfile to JOIN with user_preferences
   const fetchUserProfile = useCallback(async (userId: string) => {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+      console.log('MOCK MODE: Bypassing fetchUserProfile');
+      // Dynamically get the mock user profile to include any saved preferences
+      const getMockUserProfile = () => {
+        const baseProfile = {
+          id: 'mock-user-id-12345',
+          email: 'mock.user@example.com',
+          phone: '+11234567890',
+          full_name: 'Mock User',
+          avatar_url: `https://api.dicebear.com/7.x/pixel-art/svg?seed=mock-user`,
+          first_neighbourhood: 'King West',
+          second_neighbourhood: 'Entertainment District',
+          third_neighbourhood: 'Queen West',
+          preferred_music: ['House', 'Rap'] as MusicGenre[],
+          age: 25,
+          access_status: 'approved' as const,
+          loyalty_points: 100,
+          last_active_at: new Date().toISOString(),
+          created_at: new Date('2023-01-01T00:00:00Z').toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        
+        // Load any saved preferences from localStorage
+        try {
+          const savedPrefs = localStorage.getItem('mock_user_preferences');
+          if (savedPrefs) {
+            const preferences = JSON.parse(savedPrefs);
+            return {
+              ...baseProfile,
+              ...preferences,
+              updated_at: new Date().toISOString(),
+            };
+          }
+        } catch (error) {
+          console.warn('Failed to load mock user preferences:', error);
+        }
+        
+        return baseProfile;
+      };
+      
+      return getMockUserProfile() as UserProfile;
+    }
     const supabase = getSupabaseBrowserClient();
     
     // First, let's debug by checking if the user exists at all
@@ -60,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Now fetch preferences separately to avoid JOIN issues
     const { data: preferencesData, error: preferencesError } = await supabase
       .from('user_preferences')
-      .select('location_neighbourhood, preferred_music, age')
+      .select('first_neighbourhood, second_neighbourhood, third_neighbourhood, preferred_music, age')
       .eq('user_id', userId)
       .maybeSingle(); // Use maybeSingle to handle case where no preferences exist
     
@@ -79,7 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phone: userData.phone,
       full_name: userData.full_name,
       avatar_url: userData.avatar_url,
-      location_neighbourhood: preferences.location_neighbourhood,
+      first_neighbourhood: preferences.first_neighbourhood,
+      second_neighbourhood: preferences.second_neighbourhood,
+      third_neighbourhood: preferences.third_neighbourhood,
       preferred_music: preferences.preferred_music,
       age: preferences.age,
       access_status: userData.access_status || 'pending',
@@ -94,6 +139,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getOrCreateProfile = useCallback(async (user: SupabaseUser) => {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+      console.log('MOCK MODE: Bypassing getOrCreateProfile');
+      // Use the same dynamic profile loading as fetchUserProfile
+      return await fetchUserProfile(user.id);
+    }
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       console.error('Supabase client not initialized');
@@ -152,7 +202,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         created_at: newUser.created_at,
         updated_at: newUser.updated_at,
         // Preferences will be undefined until user completes onboarding
-        location_neighbourhood: undefined,
+        first_neighbourhood: undefined,
+        second_neighbourhood: undefined,
+        third_neighbourhood: undefined,
         preferred_music: undefined,
         age: undefined,
       };
@@ -165,6 +217,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUserProfile]);
 
   useEffect(() => {
+    // In mock mode, directly set the mock user and skip Supabase entirely
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+      console.log('MOCK MODE: Setting mock user directly');
+      // Get the dynamic mock user profile
+      const loadMockProfile = async () => {
+        const profile = await fetchUserProfile('mock-user-id-12345');
+        setUser(profile);
+        setSupabaseUser(mockUser as any);
+        setIsLoading(false);
+      };
+      loadMockProfile();
+      return;
+    }
+
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       console.warn('Supabase client not available');
@@ -343,6 +409,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>) => {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+      console.log('MOCK MODE: Bypassing updateUserProfile with:', updates);
+      setUser(prevUser => prevUser ? { ...prevUser, ...updates } : null);
+      return { error: null };
+    }
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       console.error('Supabase client not initialized');
@@ -365,7 +436,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [supabaseUser]);
 
-  const createUserPreferences = useCallback(async (preferences: { location_neighbourhood: string; preferred_music: MusicGenre[]; age: number }) => {
+  const createUserPreferences = useCallback(async (preferences: { first_neighbourhood: string; second_neighbourhood?: string; third_neighbourhood?: string; preferred_music: MusicGenre[]; age: number }) => {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+      console.log('MOCK MODE: Bypassing createUserPreferences with:', preferences);
+      setUser(prevUser => prevUser ? { ...prevUser, ...preferences } : null);
+      return { error: null };
+    }
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       console.error('Supabase client not initialized');
@@ -377,7 +453,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('user_preferences')
         .insert({
           user_id: supabaseUser?.id,
-          location_neighbourhood: preferences.location_neighbourhood,
+          first_neighbourhood: preferences.first_neighbourhood,
+          second_neighbourhood: preferences.second_neighbourhood || null,
+          third_neighbourhood: preferences.third_neighbourhood || null,
           preferred_music: preferences.preferred_music,
           age: preferences.age,
         });
@@ -403,6 +481,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabaseUser, fetchUserProfile]);
 
   const updateLastActive = useCallback(async () => {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+      // console.log('MOCK MODE: Bypassing updateLastActive');
+      return;
+    }
     const supabase = getSupabaseBrowserClient();
     if (!supabase || !supabaseUser?.id) {
       console.error('Supabase client not initialized or user not found');
@@ -424,6 +506,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabaseUser]);
 
   const checkPhoneStatus = useCallback(async (phone: string) => {
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+      console.log('MOCK MODE: Bypassing checkPhoneStatus');
+      // Simulate a user that already exists
+      return { userExists: true, isWaitlisted: false };
+    }
     try {
       // Format phone number - remove + sign for consistency
       const cleanPhone = phone.replace(/^\+/, '');

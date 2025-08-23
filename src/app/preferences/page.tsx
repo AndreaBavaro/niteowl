@@ -18,7 +18,7 @@ const TORONTO_NEIGHBORHOODS = [
   'CityPlace', 'Harbourfront', 'St. Lawrence Market', 'Church-Wellesley',
   'Yorkville', 'Annex', 'Little Italy', 'Little Portugal', 'Chinatown',
   'Parkdale', 'Roncesvalles', 'High Park', 'Bloor West', 'Danforth',
-  'Beaches', 'Leslieville', 'Other'
+  'Beaches', 'Other'
 ];
 
 export default function PreferencesPage() {
@@ -26,7 +26,9 @@ export default function PreferencesPage() {
   const router = useRouter();
   
   const [formData, setFormData] = useState({
-    location_neighbourhood: '',
+    first_neighbourhood: '',
+    second_neighbourhood: '',
+    third_neighbourhood: '',
     preferred_music: [] as MusicGenre[],
     age: '',
     full_name: ''
@@ -43,7 +45,9 @@ export default function PreferencesPage() {
   useEffect(() => {
     if (user) {
       setFormData({
-        location_neighbourhood: user.location_neighbourhood || '',
+        first_neighbourhood: user.first_neighbourhood || '',
+        second_neighbourhood: user.second_neighbourhood || '',
+        third_neighbourhood: user.third_neighbourhood || '',
         preferred_music: user.preferred_music || [],
         age: user.age?.toString() || '',
         full_name: user.full_name || ''
@@ -67,7 +71,7 @@ export default function PreferencesPage() {
 
     try {
       // Validate required fields
-      if (!formData.location_neighbourhood || formData.preferred_music.length === 0 || !formData.age || !formData.full_name) {
+      if (!formData.first_neighbourhood || formData.preferred_music.length === 0 || !formData.age || !formData.full_name) {
         setError('Please fill in all required fields');
         setLoading(false);
         return;
@@ -83,7 +87,9 @@ export default function PreferencesPage() {
       // Update user profile
       const { error: updateError } = await updateUserProfile({
         full_name: formData.full_name,
-        location_neighbourhood: formData.location_neighbourhood,
+        first_neighbourhood: formData.first_neighbourhood,
+        second_neighbourhood: formData.second_neighbourhood || undefined,
+        third_neighbourhood: formData.third_neighbourhood || undefined,
         preferred_music: formData.preferred_music,
         age: age
       });
@@ -173,21 +179,61 @@ export default function PreferencesPage() {
                 />
               </div>
 
-              {/* Neighborhood */}
+              {/* First Neighborhood */}
               <div>
                 <label className="flex items-center text-lg font-semibold text-white mb-4">
                   <MapPin className="w-5 h-5 mr-2 text-purple-400" />
-                  Preferred Neighborhood *
+                  Primary Neighborhood *
                 </label>
                 <select
-                  value={formData.location_neighbourhood}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location_neighbourhood: e.target.value }))}
+                  value={formData.first_neighbourhood}
+                  onChange={(e) => setFormData(prev => ({ ...prev, first_neighbourhood: e.target.value }))}
                   className="w-full px-4 py-3 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   required
                 >
-                  <option value="">Select your preferred area</option>
-                  {TORONTO_NEIGHBORHOODS.map(neighborhood => (
-                    <option key={neighborhood} value={neighborhood}>
+                  <option value="">Select your primary area</option>
+                  {TORONTO_NEIGHBORHOODS.map((neighborhood, index) => (
+                    <option key={`first-neighborhood-${index}`} value={neighborhood}>
+                      {neighborhood}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Second Neighborhood */}
+              <div>
+                <label className="flex items-center text-lg font-semibold text-white mb-4">
+                  <MapPin className="w-5 h-5 mr-2 text-purple-400" />
+                  Secondary Neighborhood (Optional)
+                </label>
+                <select
+                  value={formData.second_neighbourhood}
+                  onChange={(e) => setFormData(prev => ({ ...prev, second_neighbourhood: e.target.value }))}
+                  className="w-full px-4 py-3 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Select secondary area (optional)</option>
+                  {TORONTO_NEIGHBORHOODS.map((neighborhood, index) => (
+                    <option key={`second-neighborhood-${index}`} value={neighborhood}>
+                      {neighborhood}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Third Neighborhood */}
+              <div>
+                <label className="flex items-center text-lg font-semibold text-white mb-4">
+                  <MapPin className="w-5 h-5 mr-2 text-purple-400" />
+                  Third Neighborhood (Optional)
+                </label>
+                <select
+                  value={formData.third_neighbourhood}
+                  onChange={(e) => setFormData(prev => ({ ...prev, third_neighbourhood: e.target.value }))}
+                  className="w-full px-4 py-3 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Select third area (optional)</option>
+                  {TORONTO_NEIGHBORHOODS.map((neighborhood, index) => (
+                    <option key={`third-neighborhood-${index}`} value={neighborhood}>
                       {neighborhood}
                     </option>
                   ))}
@@ -201,15 +247,15 @@ export default function PreferencesPage() {
                   Music Preferences * (Select at least one)
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {MUSIC_GENRES.map(genre => (
+                  {MUSIC_GENRES.map((genre, index) => (
                     <button
-                      key={genre}
+                      key={`genre-${index}`}
                       type="button"
                       onClick={() => handleMusicToggle(genre)}
-                      className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                         formData.preferred_music.includes(genre)
-                          ? 'bg-yellow-500/20 border-yellow-500 text-yellow-300'
-                          : 'bg-zinc-700 border-zinc-600 text-zinc-300 hover:border-yellow-500/50'
+                          ? 'bg-yellow-500 text-white'
+                          : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                       }`}
                     >
                       {genre}

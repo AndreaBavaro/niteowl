@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import getSupabaseBrowserClient from '@/lib/supabase/client';
+import React from 'react';
+import { usePhoneAuth } from '@/hooks/usePhoneAuth';
 
 interface PhoneAuthProps {
   onSuccess?: (isExistingUser: boolean) => void;
@@ -12,111 +11,22 @@ interface PhoneAuthProps {
 }
 
 export default function PhoneAuth({ onSuccess, onCancel, onBack, showNameInput }: PhoneAuthProps) {
-  const { signInWithPhone, verifyOTP } = useAuth();
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [sentToPhone, setSentToPhone] = useState('');
-  const [isExistingUser, setIsExistingUser] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const { state, actions } = usePhoneAuth();
+  const { step, phoneNumber, otp, loading, error, mounted, isExistingUser } = state;
+  const { handlePhoneChange, handlePhoneSubmit, handleOtpSubmit, setOtp, goBackToPhone } = actions;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const formatPhoneNumber = (value: string) => {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length >= 10) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-    } else if (digits.length >= 6) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    } else if (digits.length >= 3) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    }
-    return digits;
-  };
-
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+  const handlePhoneFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneNumber.trim()) {
-      setError('Please enter a phone number');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const cleanPhone = phoneNumber.replace(/\D/g, '');
-      if (cleanPhone.length !== 10) {
-        setError('Please enter a valid 10-digit phone number');
-        setLoading(false);
-        return;
-      }
-      
-      const rpcPhone = `1${cleanPhone}`;
-      const authPhone = `+1${cleanPhone}`;
-      const supabase = getSupabaseBrowserClient();
-
-      console.log('Checking for user with phone number (for RPC):', rpcPhone);
-
-      // Check if user exists
-      const { data: userData, error: rpcError } = await supabase.rpc('get_user_id_by_phone', {
-        p_phone_number: rpcPhone,
-      });
-
-      if (rpcError) {
-        console.error('Error checking user existence:', rpcError);
-        setError('Could not verify phone number. Please try again.');
-        setLoading(false);
-        return;
-      }
-
-      const userExists = userData && userData.length > 0;
-      setIsExistingUser(userExists);
-
-      const { error: signInError } = await signInWithPhone(authPhone);
-      
-      if (signInError) {
-        setError(signInError?.message || 'Failed to send verification code');
-      } else {
-        setSentToPhone(authPhone);
-        setStep('otp');
-      }
-    } catch (err) {
-      setError('Failed to send verification code');
-    } finally {
-      setLoading(false);
-    }
+    await handlePhoneSubmit(onSuccess);
   };
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
+  const handleOtpFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const { error } = await verifyOTP(sentToPhone, otp);
-      
-      if (error) {
-        setError(error?.message || 'Invalid verification code');
-      } else {
-        if (onSuccess) {
-          onSuccess(isExistingUser);
-        }
-      }
-    } catch (err) {
-      setError('Verification failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    await handleOtpSubmit(onSuccess);
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value);
-    setPhoneNumber(formatted);
+  const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handlePhoneChange(e.target.value);
   };
 
   if (!mounted) {
@@ -153,7 +63,7 @@ export default function PhoneAuth({ onSuccess, onCancel, onBack, showNameInput }
           )}
 
           {step === 'phone' ? (
-            <form onSubmit={handlePhoneSubmit} className="space-y-6">
+            <form onSubmit={handlePhoneFormSubmit} className="space-y-6">
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
                   Phone Number
@@ -162,7 +72,7 @@ export default function PhoneAuth({ onSuccess, onCancel, onBack, showNameInput }
                   type="tel"
                   id="phone"
                   value={phoneNumber}
-                  onChange={handlePhoneChange}
+                  onChange={handlePhoneInputChange}
                   placeholder="(416) 555-0123"
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent backdrop-blur-sm"
                   required
@@ -179,7 +89,7 @@ export default function PhoneAuth({ onSuccess, onCancel, onBack, showNameInput }
               </button>
             </form>
           ) : (
-            <form onSubmit={handleOtpSubmit} className="space-y-6">
+            <form onSubmit={handleOtpFormSubmit} className="space-y-6">
               <div>
                 <label htmlFor="otp" className="block text-sm font-medium text-gray-300 mb-2">
                   Verification Code
@@ -208,7 +118,7 @@ export default function PhoneAuth({ onSuccess, onCancel, onBack, showNameInput }
 
                 <button
                   type="button"
-                  onClick={() => setStep('phone')}
+                  onClick={goBackToPhone}
                   className="w-full py-2 px-4 text-gray-400 hover:text-white transition-colors duration-200"
                   disabled={loading}
                 >

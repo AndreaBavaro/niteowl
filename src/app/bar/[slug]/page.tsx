@@ -1,5 +1,3 @@
-'use client';
-
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -16,7 +14,7 @@ import {
   ArrowLeft,
   Heart
 } from 'lucide-react';
-import withAuth from '@/components/auth/withAuth';
+
 
 // Server component to fetch bar by slug
 async function getBar(slug: string): Promise<Bar | null> {
@@ -286,13 +284,15 @@ function BarDetailSkeleton() {
   );
 }
 
-// Main page component
-function BarPage({ params }: { params: { slug: string } }) {
+// Main page component (Server Component)
+async function BarPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  
   return (
     <Suspense fallback={<BarDetailSkeleton />}>
-      <BarDetail slug={params.slug} />
+      <BarDetail slug={slug} />
     </Suspense>
   );
 }
 
-export default withAuth(BarPage);
+export default BarPage;

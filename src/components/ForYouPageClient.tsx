@@ -1,70 +1,116 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { Clock, Users, Star, MapPin, Music, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, Users, Star, MapPin, Music, Zap, ChevronLeft, ChevronRight, TreePine, Building2, Disc3, Mic, UtensilsCrossed, Circle, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 import { Bar, UserProfile } from '@/lib/types';
+import { useForYouPage, Recommendations } from '@/hooks/useForYouPage';
+import { useRecommendations } from '@/hooks/useRecommendations';
+import { useVenueQueue } from '@/hooks/useVenueQueue';
+import TopNavigation from './TopNavigation';
+import VenueCard from './VenueCard';
+import ContextBar from './ContextBar';
+import ControlsRow from './ControlsRow';
+import CategorySelector, { CategoryType } from './CategorySelector';
+import CategoryDisplay from './CategoryDisplay';
+import CategoryOverview from './CategoryOverview';
 
-const BarCard = ({ bar }: { bar: Bar }) => {
-  const getBarImage = (barName: string) => {
-    const imageId = Math.abs(barName.split('').reduce((a, b) => a + b.charCodeAt(0), 0)) % 1000 + 100;
-    return `https://picsum.photos/400/240?random=${imageId}`;
+// Helper function to convert Bar data to VenueCard props
+const convertBarToVenueCardProps = (bar: Bar, getBarImage: (barName: string) => string) => {
+  // Calculate match score based on user preferences (mock for now)
+  const matchScore = bar.is_featured ? 85 + Math.floor(Math.random() * 15) : undefined;
+  
+  // Convert wait time to VenueCard format
+  const getWaitStatus = () => {
+    if (bar.current_wait_time) {
+      const waitTime = bar.current_wait_time.toLowerCase();
+      if (waitTime.includes('no wait')) return { status: 'none' as const };
+      if (waitTime.includes('15') || waitTime.includes('20')) return { status: 'short' as const, min: 15, max: 30 };
+      if (waitTime.includes('25') || waitTime.includes('30')) return { status: 'med' as const, min: 25, max: 35 };
+      return { status: 'unknown' as const };
+    }
+    return { status: 'unknown' as const };
   };
-
-  return (
-    <Link href={`/bar/${bar.slug}`}>
-      <div className="bg-zinc-800 rounded-xl min-w-[300px] border border-zinc-700 relative overflow-hidden group hover:scale-[1.02] hover:border-green-500/50 transition-all duration-300">
-        <div className="relative h-40 overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
-            style={{ backgroundImage: `url(${getBarImage(bar.name)})` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/80" />
-          <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
-            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            <span className="text-white text-sm font-bold">{bar.service_rating}</span>
-          </div>
-          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
-            bar.typical_lineup_min === '0-10 min' 
-              ? 'bg-green-600/80 text-green-100' 
-              : 'bg-orange-600/80 text-orange-100'
-          }`}>
-            {bar.typical_lineup_min} wait
-          </div>
-          <div className="absolute bottom-3 left-3 right-3">
-            <h3 className="font-bold text-white text-lg mb-1">{bar.name}</h3>
-            <div className="flex items-center gap-2 text-zinc-300">
-              <MapPin className="w-4 h-4" />
-              <span className="text-sm">{bar.neighbourhood}</span>
-            </div>
-          </div>
-        </div>
-        <div className="p-4">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-zinc-400">
-                <Music className="w-4 h-4 text-green-400" />
-                <span>{bar.top_music.join(', ')}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-zinc-400">
-                <Users className="w-4 h-4 text-blue-400" />
-                <span>{bar.typical_vibe}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-500">
-                {bar.cover_frequency}
-              </span>
-              <span className="text-xs px-3 py-1 bg-gradient-to-r from-green-600/20 to-green-500/20 text-green-400 rounded-full border border-green-500/30">
-                {bar.typical_vibe}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-      </div>
-    </Link>
-  );
+  
+  // Convert cover frequency to VenueCard format
+  const getCoverInfo = () => {
+    if (bar.cover_frequency === 'No cover') return { type: 'none' as const };
+    if (bar.cover_frequency === 'Yes-always' && bar.cover_amount) {
+      const amount = parseInt(bar.cover_amount.replace(/[^0-9]/g, ''));
+      return { type: 'fixed' as const, amount };
+    }
+    if (bar.cover_frequency === 'Sometimes' && bar.cover_amount) {
+      const amount = parseInt(bar.cover_amount.replace(/[^0-9]/g, ''));
+      return { type: 'from' as const, amount };
+    }
+    return { type: 'none' as const };
+  };
+  
+  // Convert highlights
+  const getHighlights = () => {
+    const highlights: any = {};
+    
+    if (bar.live_events) {
+      bar.live_events.forEach(event => {
+        if (event.toLowerCase().includes('dj')) {
+          highlights.liveDj = { start: '10PM', end: '3AM' };
+        }
+        if (event.toLowerCase().includes('happy hour')) {
+          const match = event.match(/until (\d+[ap]m)/i);
+          if (match) highlights.happyHourUntil = match[1];
+        }
+      });
+    }
+    
+    // Convert bar features to tags
+    const tags = [];
+    if (bar.has_rooftop) tags.push('Rooftop');
+    if (bar.has_patio) tags.push('Patio');
+    if (bar.has_dancefloor) tags.push('Dancefloor');
+    if (bar.has_food) tags.push('Food');
+    if (bar.live_music_days && bar.live_music_days.length > 0) tags.push('Live Music');
+    if (bar.karaoke_nights && bar.karaoke_nights.length > 0) tags.push('Karaoke');
+    
+    if (tags.length > 0) highlights.tags = tags;
+    
+    return Object.keys(highlights).length > 0 ? highlights : undefined;
+  };
+  
+  // Extract age range from age_group_min and age_group_max
+  const getCrowdEstimate = () => {
+    if (bar.age_group_min) {
+      const minAge = parseInt(bar.age_group_min.split('-')[0]);
+      const maxAge = bar.age_group_max ? parseInt(bar.age_group_max.split('-')[1]) : minAge + 8;
+      return { minAge, maxAge };
+    }
+    return undefined;
+  };
+  
+  return {
+    id: bar.id,
+    name: bar.name,
+    neighborhood: bar.neighbourhood || 'Toronto',
+    distanceMinutes: 5 + Math.floor(Math.random() * 20), // Mock distance
+    matchScore,
+    rating: {
+      value: bar.service_rating,
+      count: 50 + Math.floor(Math.random() * 400)
+    },
+    cover: getCoverInfo(),
+    wait: {
+      ...getWaitStatus(),
+      updatedAt: new Date(Date.now() - Math.floor(Math.random() * 3600000)).toISOString() // Random time within last hour
+    },
+    highlights: getHighlights(),
+    crowdEstimate: getCrowdEstimate(),
+    vibe: bar.typical_vibe,
+    imageUrl: getBarImage(bar.name),
+    partnerBookingUrl: bar.booking_url,
+    directionsUrl: `https://maps.google.com/?q=${encodeURIComponent(bar.address || bar.name + ' ' + bar.neighbourhood)}`,
+    isFavorite: false, // TODO: Connect to favorites system
+    onToggleFavorite: (id: string) => console.log('Toggle favorite:', id),
+    onOpenDetails: (id: string) => window.location.href = `/bar/${bar.slug}`
+  };
 };
 
 interface CarouselProps {
@@ -72,9 +118,10 @@ interface CarouselProps {
   subtitle?: string;
   bars: Bar[];
   icon?: React.ReactNode;
+  getBarImage: (barName: string) => string;
 }
 
-const Carousel = ({ title, subtitle, bars, icon }: CarouselProps) => {
+const Carousel = ({ title, subtitle, bars, icon, getBarImage }: CarouselProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -127,7 +174,7 @@ const Carousel = ({ title, subtitle, bars, icon }: CarouselProps) => {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {bars.map((bar) => (
-          <BarCard key={bar.id} bar={bar} />
+          <VenueCard key={bar.id} {...convertBarToVenueCardProps(bar, getBarImage)} />
         ))}
       </div>
     </div>
@@ -136,120 +183,88 @@ const Carousel = ({ title, subtitle, bars, icon }: CarouselProps) => {
 
 interface ForYouPageClientProps {
   user: UserProfile;
-  recommendations: {
-    perfectForTonight: Bar[];
-    yourVibe: Bar[];
-    quickEntry: Bar[];
-    trendingInArea: Bar[];
+  initialRecommendations: {
+    discoverTonight: Bar[];
+    hiddenGems: Bar[];
+    yourRegulars: Bar[];
   };
 }
 
-export default function ForYouPageClient({ user, recommendations }: ForYouPageClientProps) {
-  const [currentTime, setCurrentTime] = useState('');
+export default function ForYouPageClient({ user, initialRecommendations }: ForYouPageClientProps) {
+  // Convert to full Recommendations structure for useForYouPage hook
+  const fullRecommendations: Recommendations = {
+    perfectForTonight: [],
+    yourVibe: [],
+    quickEntry: [],
+    trendingInArea: [],
+    discoverTonight: initialRecommendations.discoverTonight,
+    hiddenGems: initialRecommendations.hiddenGems,
+    yourRegulars: initialRecommendations.yourRegulars
+  };
+  
+  const { state, actions } = useForYouPage(user, fullRecommendations);
+  const { currentTime } = state;
+  const { generateBarImage } = actions;
+  const { getVisibleVenues, hideVenue } = useVenueQueue();
+  
+  // Category state management
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('discoverTonight');
+  
+  // State for new UI components
+  const [activeChip, setActiveChip] = useState<'area' | 'vibe' | 'tonight' | 'points' | undefined>();
+  const [sortBy, setSortBy] = useState<'match' | 'cover' | 'wait' | 'rating'>('match');
+  const [hasActiveFilters, setHasActiveFilters] = useState(false);
+  const [updatedAt] = useState('2 min ago');
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const day = now.toLocaleDateString('en-US', { weekday: 'long' });
-      const time = now.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      });
-      setCurrentTime(`${day}, ${time}`);
-    };
+  // Get visible venues for the selected category
+  const getCurrentCategoryVenues = () => {
+    const allVenues = state.recommendations[selectedCategory] || [];
+    return getVisibleVenues(selectedCategory, allVenues);
+  };
 
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  // Handle hiding a venue
+  const handleHideVenue = (venueId: string) => {
+    hideVenue(selectedCategory, venueId);
+  };
 
-  // Recommendations are now passed as props from server-side API
+  // Get category counts for the selector
+  const categoryCounts = {
+    discoverTonight: state.recommendations.discoverTonight.length,
+    hiddenGems: state.recommendations.hiddenGems.length,
+    yourRegulars: state.recommendations.yourRegulars.length
+  };
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800" />
+    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+      <TopNavigation />
       
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="relative">
-              <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent">
-                Good evening, {user.full_name || 'Guest'} 👋
-              </h1>
-              <p className="text-zinc-400 text-lg">{currentTime}</p>
-              <div className="absolute -top-2 -left-2 w-2 h-2 bg-green-400 rounded-full animate-ping" />
-            </div>
-            <div className="text-right bg-gradient-to-br from-zinc-800/50 to-zinc-700/50 backdrop-blur-sm rounded-2xl p-6 border border-zinc-700/50">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5 text-yellow-400" />
-                <span className="text-sm text-zinc-300 font-medium">Loyalty Points</span>
-              </div>
-              <div className="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text mb-1">
-                {user.loyalty_points || 0}
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 backdrop-blur-sm rounded-xl p-4 border border-green-500/20">
-              <div className="flex items-center gap-2 mb-1">
-                <MapPin className="w-4 h-4 text-green-400" />
-                <span className="text-sm text-green-300">Your Area</span>
-              </div>
-              <p className="text-white font-semibold">{user.location_neighbourhood || 'Not set'}</p>
-            </div>
-            <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20">
-              <div className="flex items-center gap-2 mb-1">
-                <Music className="w-4 h-4 text-purple-400" />
-                <span className="text-sm text-purple-300">Your Vibe</span>
-              </div>
-              <p className="text-white font-semibold">{user.preferred_music?.join(', ') || 'Not set'}</p>
-            </div>
-            <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 backdrop-blur-sm rounded-xl p-4 border border-blue-500/20">
-              <div className="flex items-center gap-2 mb-1">
-                <Clock className="w-4 h-4 text-blue-400" />
-                <span className="text-sm text-blue-300">Tonight</span>
-              </div>
-              <p className="text-white font-semibold">Prime Time</p>
-            </div>
-          </div>
-        </div>
+      <ContextBar
+        area={user.first_neighbourhood}
+        vibe={user.preferred_music?.join(', ')}
+        tonight={currentTime === 'night' ? 'Prime Time' : 'Afternoon'}
+        points={user.loyalty_points || 0}
+        activeChip={activeChip}
+        onAreaClick={() => setActiveChip(activeChip === 'area' ? undefined : 'area')}
+        onVibeClick={() => setActiveChip(activeChip === 'vibe' ? undefined : 'vibe')}
+        onTonightClick={() => setActiveChip(activeChip === 'tonight' ? undefined : 'tonight')}
+        onPointsClick={() => setActiveChip(activeChip === 'points' ? undefined : 'points')}
+      />
+      
+      {/* Category Overview with Filters */}
+      <CategoryOverview
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        categoryCounts={categoryCounts}
+        onFiltersClick={() => console.log('Open filters modal')}
+        hasActiveFilters={hasActiveFilters}
+      />
 
-        <Carousel
-          title="Perfect for Tonight"
-          subtitle="Top-rated spots for a great night out"
-          bars={recommendations.perfectForTonight}
-          icon={<Clock className="w-5 h-5 text-green-400" />}
-        />
-
-        {recommendations.yourVibe && recommendations.yourVibe.length > 0 && (
-          <Carousel
-            title="Your Vibe"
-            subtitle={`Venues matching your love for ${user.preferred_music?.join(', ')}`}
-            bars={recommendations.yourVibe}
-            icon={<Music className="w-5 h-5 text-purple-400" />}
-          />
-        )}
-
-        {recommendations.quickEntry && recommendations.quickEntry.length > 0 && (
-          <Carousel
-            title="Quick Entry"
-            subtitle="Walk right in or minimal wait"
-            bars={recommendations.quickEntry}
-            icon={<Users className="w-5 h-5 text-blue-400" />}
-          />
-        )}
-
-        {recommendations.trendingInArea && recommendations.trendingInArea.length > 0 && (
-          <Carousel
-            title={`Trending in ${user.location_neighbourhood || 'Toronto'}`}
-            subtitle="What's hot in your neighborhood"
-            bars={recommendations.trendingInArea}
-            icon={<MapPin className="w-5 h-5 text-red-400" />}
-          />
-        )}
-      </div>
+      {/* Category Display */}
+      <CategoryDisplay
+        category={selectedCategory}
+        venues={getCurrentCategoryVenues()}
+        onHideVenue={handleHideVenue}
+      />
     </div>
   );
 }

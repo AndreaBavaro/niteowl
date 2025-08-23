@@ -1,9 +1,6 @@
-'use client';
-
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Clock, DollarSign, Users, ArrowRight } from 'lucide-react';
-import withAuth from '@/components/auth/withAuth';
 import FeaturedBars, { FeaturedBarsSkeleton } from '@/components/FeaturedBars';
 
 function HomePage() {
@@ -24,7 +21,7 @@ function HomePage() {
             <div className="mb-8 animate-slide-in-up">
               <h1 className="text-6xl md:text-7xl font-bold mb-4">
                 <span className="bg-gradient-to-r from-white via-zinc-100 to-zinc-200 bg-clip-text text-transparent">
-                  NightOwl
+                  NiteFinder
                 </span>
                 <br />
                 <span className="bg-gradient-to-r from-green-400 via-green-300 to-emerald-400 bg-clip-text text-transparent animate-shimmer">
@@ -97,7 +94,9 @@ function HomePage() {
           </Link>
         </div>
 
-        
+        <Suspense fallback={<FeaturedBarsSkeleton />}>
+          <FeaturedBars />
+        </Suspense>
       </div>
 
       {/* Features Section */}
@@ -139,4 +138,4 @@ function HomePage() {
   );
 }
 
-export default withAuth(HomePage);
+export default HomePage;

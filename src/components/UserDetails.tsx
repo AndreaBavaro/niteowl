@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { User, ArrowRight } from 'lucide-react';
+import { useUserDetails } from '@/hooks/useUserDetails';
 
 interface UserDetailsProps {
   onComplete: (name: string) => void;
@@ -10,27 +11,13 @@ interface UserDetailsProps {
 }
 
 export default function UserDetails({ onComplete, email, phone }: UserDetailsProps) {
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { state, actions } = useUserDetails();
+  const { name, loading, error } = state;
+  const { setName, handleSubmit } = actions;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      setError('Please enter your name');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      onComplete(name.trim());
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    await handleSubmit(onComplete);
   };
 
   return (
@@ -66,7 +53,7 @@ export default function UserDetails({ onComplete, email, phone }: UserDetailsPro
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleFormSubmit} className="space-y-6">
           <div>
             <input
               type="text"

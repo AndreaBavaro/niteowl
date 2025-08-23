@@ -36,3 +36,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# environment variables (sensitive)
+.env.local
+.env.production.local
+.env.waitlist
+
+# test files
+test-*.js
+debug-*.js
+
+# deployment docs with sensitive info
+WAITLIST_DEPLOYMENT.md

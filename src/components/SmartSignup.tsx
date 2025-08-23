@@ -1,154 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { Phone, AlertCircle, CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
-
-interface PhoneCheckResult {
-  userExists: boolean;
-  accessStatus: 'pending' | 'approved' | 'rejected';
-  hasRecentSession: boolean;
-  hasPreferences: boolean;
-  nextStep: string;
-  skipOTP: boolean;
-  user?: {
-    id: string;
-    phone: string;
-    full_name: string;
-    access_status: string;
-  } | null;
-  error?: string;
-}
+import { useSmartSignup, PhoneCheckResult } from '@/hooks/useSmartSignup';
+import { useRouter } from 'next/navigation';
 
 export default function SmartSignup() {
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'phone' | 'otp' | 'message'>('phone');
-  const [phoneResult, setPhoneResult] = useState<PhoneCheckResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  const { checkPhoneStatus, signInWithPhone, verifyOTP, updateLastActive } = useAuth();
+  const { state, actions } = useSmartSignup();
+  const { phone, otp, step, phoneResult, loading, error } = state;
+  const { setPhone, setOtp, setError, formatPhoneNumber, handlePhoneSubmit, handleOTPSubmit, goBackToPhone } = actions;
   const router = useRouter();
 
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Format as (XXX) XXX-XXXX for North American numbers (no + sign)
-    if (digits.length <= 10) {
-      const match = digits.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
-      if (match) {
-        return `${match[1] ? `(${match[1]}` : ''}${match[1] && match[1].length === 3 ? ') ' : ''}${match[2]}${match[2] && match[3] ? '-' : ''}${match[3]}`;
-      }
-    }
-    return value;
-  };
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+  const handlePhoneFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      // Extract digits - no + sign needed
-      const digits = phone.replace(/\D/g, '');
-      const cleanPhone = digits.startsWith('1') ? digits : `1${digits}`;
-
-      // Check phone status
-      const result = await checkPhoneStatus(cleanPhone);
-      
-      if (result.error) {
-        setError(result.error);
-        setLoading(false);
-        return;
-      }
-
-      // Cast the result to the correct type since checkPhoneStatus returns the API response
-      const phoneResult = result as PhoneCheckResult;
-      setPhoneResult(phoneResult);
-
-      // Handle different scenarios
-      if (!phoneResult.userExists) {
-        // New user - send OTP
-        const { error: otpError } = await signInWithPhone(cleanPhone);
-        if (otpError) {
-          setError(otpError || 'Failed to send OTP');
-        } else {
-          setStep('otp');
-        }
-      } else if (phoneResult.skipOTP && phoneResult.hasRecentSession) {
-        // User has recent session - skip OTP and route directly
-        await updateLastActive();
-        handleDirectRouting(phoneResult);
-      } else if (phoneResult.accessStatus === 'rejected') {
-        // Rejected user - show message
-        setStep('message');
-      } else {
-        // Existing user needs OTP verification
-        const { error: otpError } = await signInWithPhone(cleanPhone);
-        if (otpError) {
-          setError(otpError || 'Failed to send OTP');
-        } else {
-          setStep('otp');
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
+    await handlePhoneSubmit();
   };
 
-  const handleOTPSubmit = async (e: React.FormEvent) => {
+  const handleOTPFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const digits = phone.replace(/\D/g, '');
-      const cleanPhone = digits.startsWith('1') ? digits : `1${digits}`;
-
-      const { error: verifyError } = await verifyOTP(cleanPhone, otp);
-      
-      if (verifyError) {
-        setError(verifyError || 'Invalid OTP');
-        setLoading(false);
-        return;
-      }
-
-      // Update last active timestamp
-      await updateLastActive();
-
-      // Route based on phone check result
-      if (phoneResult) {
-        handleDirectRouting(phoneResult);
-      } else {
-        // Fallback for new users
-        router.push('/waiting');
-      }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-      setLoading(false);
-    }
+    await handleOTPSubmit();
   };
 
-  const handleDirectRouting = (result: PhoneCheckResult) => {
-    switch (result.nextStep) {
-      case 'waiting':
-        router.push('/waiting');
-        break;
-      case 'for-you':
-        router.push('/for-you');
-        break;
-      case 'preferences':
-        router.push('/preferences');
-        break;
-      default:
-        router.push('/waiting');
-    }
-  };
+
 
   const getStatusIcon = () => {
     if (!phoneResult) return null;
@@ -212,12 +85,7 @@ export default function SmartSignup() {
               )}
               
               <button
-                onClick={() => {
-                  setStep('phone');
-                  setPhone('');
-                  setPhoneResult(null);
-                  setError('');
-                }}
+                onClick={goBackToPhone}
                 className="w-full bg-zinc-700 hover:bg-zinc-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300"
               >
                 Try Different Number
@@ -248,7 +116,7 @@ export default function SmartSignup() {
         </div>
 
         {step === 'phone' && (
-          <form onSubmit={handlePhoneSubmit} className="space-y-6">
+          <form onSubmit={handlePhoneFormSubmit} className="space-y-6">
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-zinc-300 mb-2">
                 Phone Number
@@ -291,7 +159,7 @@ export default function SmartSignup() {
         )}
 
         {step === 'otp' && (
-          <form onSubmit={handleOTPSubmit} className="space-y-6">
+          <form onSubmit={handleOTPFormSubmit} className="space-y-6">
             <div>
               <label htmlFor="otp" className="block text-sm font-medium text-zinc-300 mb-2">
                 Verification Code
@@ -331,11 +199,7 @@ export default function SmartSignup() {
 
             <button
               type="button"
-              onClick={() => {
-                setStep('phone');
-                setOtp('');
-                setError('');
-              }}
+              onClick={goBackToPhone}
               className="w-full text-zinc-400 hover:text-white transition-colors duration-200"
             >
               ← Back to phone number

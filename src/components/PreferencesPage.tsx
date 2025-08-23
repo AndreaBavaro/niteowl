@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Music, MapPin, Calendar, ArrowRight, Check } from 'lucide-react';
+import { usePreferences } from '@/hooks/usePreferences';
 
 interface PreferencesPageProps {
   onComplete: (preferences: {
@@ -9,12 +10,16 @@ interface PreferencesPageProps {
     music_preferences: string[];
     neighbourhood: string;
   }) => Promise<void>;
-  loading: boolean;
+  loading?: boolean;
 }
 
 const MUSIC_GENRES = [
   'House', 'EDM', 'Hip-hop', 'Rap', 'Top 40', 'Pop', 
   'Mixed/Variety', 'Live bands', 'City-pop', 'Jazz'
+];
+
+const AGE_GROUPS = [
+  '18-24', '25-30', '31-35', '36-40', '41-45', '46-50', '51+'
 ];
 
 // Toronto neighborhoods - you can expand this list
@@ -26,50 +31,16 @@ const NEIGHBOURHOODS = [
   'CityPlace', 'Harbourfront', 'Church-Wellesley', 'Other'
 ];
 
-export default function PreferencesPage({ onComplete, loading }: PreferencesPageProps) {
-  const [age, setAge] = useState<number>(0);
-  const [musicPreferences, setMusicPreferences] = useState<string[]>([]);
-  const [neighbourhood, setNeighbourhood] = useState('');
-  const [error, setError] = useState('');
-
-  const handleMusicToggle = (genre: string) => {
-    setMusicPreferences(prev => 
-      prev.includes(genre) 
-        ? prev.filter(g => g !== genre)
-        : [...prev, genre]
-    );
-  };
+export default function PreferencesPage({ onComplete, loading: externalLoading }: PreferencesPageProps) {
+  const { state, actions, isFormValid } = usePreferences();
+  const { age, musicPreferences, neighbourhood, error, loading } = state;
+  const { setAge, toggleMusicGenre, setNeighbourhood, submitPreferences } = actions;
 
   const handleSubmit = async () => {
-    if (!age || age < 18 || age > 99) {
-      setError('Please enter a valid age between 18 and 99');
-      return;
-    }
-    
-    if (musicPreferences.length === 0) {
-      setError('Please select at least one music genre');
-      return;
-    }
-    
-    if (!neighbourhood) {
-      setError('Please select your neighbourhood');
-      return;
-    }
-
-    setError('');
-
-    try {
-      await onComplete({
-        age: age,
-        music_preferences: musicPreferences,
-        neighbourhood: neighbourhood
-      });
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-    }
+    await submitPreferences(onComplete);
   };
 
-  const isFormValid = age >= 18 && age <= 99 && musicPreferences.length > 0 && neighbourhood;
+  const isLoading = loading || externalLoading;
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -101,20 +72,23 @@ export default function PreferencesPage({ onComplete, loading }: PreferencesPage
               <h2 className="text-xl font-semibold text-white">Age Group</h2>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {AGE_GROUPS.map((age) => (
-                <button
-                  key={age}
-                  type="button"
-                  onClick={() => setAgeGroup(age)}
-                  className={`p-4 rounded-xl border transition-all duration-200 ${
-                    ageGroup === age
-                      ? 'bg-blue-500/20 border-blue-400 text-blue-300'
-                      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'
-                  }`}
-                >
-                  {age}
-                </button>
-              ))}
+              {AGE_GROUPS.map((ageGroup: string) => {
+                const ageValue = ageGroup === '51+' ? 51 : parseInt(ageGroup.split('-')[0]);
+                return (
+                  <button
+                    key={ageGroup}
+                    type="button"
+                    onClick={() => setAge(ageValue)}
+                    className={`p-3 rounded-xl border transition-all duration-200 ${
+                      state.age === ageValue
+                        ? 'bg-blue-500/20 border-blue-400 text-blue-300'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {ageGroup}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -132,7 +106,7 @@ export default function PreferencesPage({ onComplete, loading }: PreferencesPage
                 <button
                   key={genre}
                   type="button"
-                  onClick={() => handleMusicToggle(genre)}
+                  onClick={() => toggleMusicGenre(genre)}
                   className={`p-3 rounded-xl border transition-all duration-200 flex items-center justify-between ${
                     musicPreferences.includes(genre)
                       ? 'bg-purple-500/20 border-purple-400 text-purple-300'
@@ -182,11 +156,11 @@ export default function PreferencesPage({ onComplete, loading }: PreferencesPage
 
           <button
             type="submit"
-            disabled={loading || !isFormValid}
+            disabled={isLoading || !isFormValid}
             className="w-full p-4 rounded-xl bg-gradient-to-r from-green-500 to-purple-500 text-white font-semibold hover:from-green-600 hover:to-purple-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
-            <span>{loading ? 'Saving Preferences...' : 'Complete Setup'}</span>
-            {!loading && <ArrowRight className="w-5 h-5" />}
+            <span>{isLoading ? 'Saving Preferences...' : 'Complete Setup'}</span>
+            {!isLoading && <ArrowRight className="w-5 h-5" />}
           </button>
         </form>
 

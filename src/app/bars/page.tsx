@@ -1,11 +1,10 @@
-'use client';
-
-import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { Suspense } from 'react';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { Bar } from '@/lib/types';
 import Link from 'next/link';
-import { Clock, DollarSign, Users, Star, MapPin, Search } from 'lucide-react';
-import withAuth from '@/components/auth/withAuth';
+import { Clock, DollarSign, Users, Star, MapPin } from 'lucide-react';
+import BarsSearchClient from '@/components/BarsSearchClient';
 
 // Bar card component
 function BarCard({ bar }: { bar: Bar }) {
@@ -95,102 +94,111 @@ function BarCard({ bar }: { bar: Bar }) {
   );
 }
 
-function BarsPage() {
-  const [bars, setBars] = useState<Bar[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    async function fetchBars() {
-      if (!supabase) {
-        setLoading(false);
-        return;
+// Server component to fetch bars data
+async function getBars(): Promise<Bar[]> {
+  // Handle mock mode
+  if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+    // Return mock bars data
+    return [
+      {
+        id: 'bar-1',
+        name: 'Rebel Nightclub',
+        slug: 'rebel-nightclub',
+        neighbourhood: 'Entertainment District',
+        address: '69 Polson St, Toronto, ON',
+        description: 'Toronto\'s largest nightclub with world-class DJs.',
+        typical_lineup_min: '30+ min',
+        typical_lineup_max: undefined,
+        longest_line_days: ['Fri', 'Sat'],
+        cover_frequency: 'Yes-always',
+        cover_amount: 'Over $20',
+        typical_vibe: 'High-energy dance club',
+        top_music: ['House', 'EDM'],
+        age_group_min: '18-21',
+        age_group_max: '25-30',
+        service_rating: 4.2,
+        live_music_days: ['Fri', 'Sat'],
+        has_patio: false,
+        has_rooftop: false,
+        has_dancefloor: true,
+        karaoke_nights: [],
+        has_food: true,
+        capacity_size: 'Large',
+        has_pool_table: false,
+        has_arcade_games: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
+      },
+      {
+        id: 'bar-2',
+        name: 'TOYBOX',
+        slug: 'toybox',
+        neighbourhood: 'King West',
+        address: '473 Adelaide St W, Toronto, ON',
+        description: 'Upscale nightclub with VIP bottle service.',
+        typical_lineup_min: '15-30 min',
+        typical_lineup_max: '30+ min',
+        longest_line_days: ['Fri', 'Sat'],
+        cover_frequency: 'Sometimes',
+        cover_amount: '$10-$20',
+        typical_vibe: 'Upscale and exclusive',
+        top_music: ['Hip-hop', 'Top 40'],
+        age_group_min: '22-25',
+        age_group_max: '25-30',
+        service_rating: 4.5,
+        live_music_days: [],
+        has_patio: false,
+        has_rooftop: true,
+        has_dancefloor: true,
+        karaoke_nights: [],
+        has_food: true,
+        capacity_size: 'Medium',
+        has_pool_table: false,
+        has_arcade_games: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z'
       }
+    ];
+  }
 
-      const { data, error } = await supabase
-        .from('bars')
-        .select('*')
-        .order('name');
-
-      if (error) {
-        console.error('Error fetching bars:', error);
-      } else {
-        setBars(data || []);
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          },
+        },
       }
-      setLoading(false);
+    );
+
+    const { data, error } = await supabase
+      .from('bars')
+      .select('*')
+      .order('service_rating', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching bars:', error);
+      return [];
     }
 
-    fetchBars();
-  }, []);
-
-  const filteredBars = useMemo(() => {
-    if (!searchQuery) return bars;
-    
-    const query = searchQuery.toLowerCase();
-    return bars.filter(bar => 
-      bar.name.toLowerCase().includes(query) ||
-      bar.neighbourhood?.toLowerCase().includes(query) ||
-      bar.typical_vibe?.toLowerCase().includes(query) ||
-      bar.top_music.some(genre => genre.toLowerCase().includes(query))
-    );
-  }, [bars, searchQuery]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-900 text-white relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800" />
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
-        </div>
-        
-        <div className="relative z-10 pt-20">
-          <div className="container mx-auto px-4">
-            {/* Header */}
-            <div className="mb-8 text-center">
-              <h1 className="text-5xl md:text-6xl font-bold mb-4">
-                <span className="bg-gradient-to-r from-white via-zinc-100 to-zinc-200 bg-clip-text text-transparent">All</span>
-                {' '}
-                <span className="bg-gradient-to-r from-green-400 via-green-300 to-emerald-400 bg-clip-text text-transparent animate-shimmer">Bars</span>
-              </h1>
-              <p className="text-zinc-300 text-lg max-w-2xl mx-auto">Your guide to Toronto's hottest nightlife destinations</p>
-              
-              {/* Floating dots */}
-              <div className="absolute top-20 left-10 w-2 h-2 bg-green-400/30 rounded-full animate-float" />
-              <div className="absolute top-32 right-20 w-1 h-1 bg-purple-400/40 rounded-full animate-float" style={{ animationDelay: '1s' }} />
-              <div className="absolute top-40 left-1/3 w-1.5 h-1.5 bg-blue-400/30 rounded-full animate-float" style={{ animationDelay: '2s' }} />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="bg-zinc-800/50 backdrop-blur-sm rounded-xl p-6 border border-zinc-700/50 animate-pulse">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="h-5 bg-zinc-700 rounded w-24 mb-2"></div>
-                      <div className="h-4 bg-zinc-700 rounded w-16"></div>
-                    </div>
-                    <div className="h-5 bg-zinc-700 rounded w-8"></div>
-                  </div>
-                  <div className="space-y-2 mb-4">
-                    <div className="h-4 bg-zinc-700 rounded w-20"></div>
-                    <div className="h-4 bg-zinc-700 rounded w-16"></div>
-                    <div className="h-4 bg-zinc-700 rounded w-18"></div>
-                  </div>
-                  <div className="h-6 bg-zinc-700 rounded w-20 mb-3"></div>
-                  <div className="flex gap-1">
-                    <div className="h-5 bg-zinc-700 rounded-full w-12"></div>
-                    <div className="h-5 bg-zinc-700 rounded-full w-16"></div>
-                    <div className="h-5 bg-zinc-700 rounded-full w-14"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return data || [];
+  } catch (error) {
+    console.error('Error in getBars:', error);
+    return [];
   }
+}
+
+async function BarsPage() {
+  const bars = await getBars();
 
   return (
     <div className="min-h-screen bg-zinc-900 text-white relative overflow-hidden">
@@ -219,66 +227,17 @@ function BarsPage() {
             <div className="absolute top-40 left-1/3 w-1.5 h-1.5 bg-blue-400/30 rounded-full animate-float" style={{ animationDelay: '2s' }} />
           </div>
 
-        {bars.length === 0 && !loading ? (
-          <div className="text-center py-16">
-            <p className="text-zinc-400 text-lg">
-              {!supabase ? 'Database connection not available.' : 'No bars available yet.'}
-            </p>
-            {!supabase && (
-              <p className="text-zinc-500 text-sm mt-2">
-                Please check your environment variables and database connection.
-              </p>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Search Bar */}
-            <div className="mb-12 flex justify-center">
-              <div className="relative max-w-lg w-full">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-400 w-5 h-5 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search bars, neighborhoods, vibes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-6 py-4 bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/50 rounded-2xl text-white placeholder-zinc-400 focus:outline-none focus:border-green-400/50 focus:ring-2 focus:ring-green-400/20 transition-all duration-300 text-lg"
-                />
-              </div>
-              {searchQuery && (
-                <p className="text-zinc-400 text-sm mt-2">
-                  {filteredBars.length} of {bars.length} bars match "{searchQuery}"
-                </p>
-              )}
+          {bars.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-zinc-400 text-lg">No bars available yet.</p>
             </div>
-
-            {/* Results */}
-            {filteredBars.length === 0 && searchQuery ? (
-              <div className="text-center py-16">
-                <div className="text-zinc-400 mb-4">
-                  <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">No bars match your search</p>
-                  <p className="text-sm">Try a different search term</p>
-                </div>
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="px-6 py-2 bg-green-400 hover:bg-green-500 text-black font-medium rounded-lg transition-colors"
-                >
-                  Clear Search
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredBars.map((bar) => (
-                  <BarCard key={bar.id} bar={bar} />
-                ))}
-              </div>
-            )}
-          </>
-        )}
+          ) : (
+            <BarsSearchClient bars={bars} />
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-export default withAuth(BarsPage);
+export default BarsPage;

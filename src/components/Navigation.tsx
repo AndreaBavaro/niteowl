@@ -1,19 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 import { Menu, X, Home, Search, MapPin, User, Heart, Zap, LogOut } from 'lucide-react';
 import { Button } from './ui/Button';
-import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '@/hooks/useNavigation';
 
 export default function Navigation() {
-  const [isOpen, setIsOpen] = useState(false);
-  const { user, isAuthenticated, signOut } = useAuth();
-
-  const handleSignOut = () => {
-    signOut();
-    setIsOpen(false);
-  };
+  const { state, actions } = useNavigation();
+  const { isOpen, user, isAuthenticated } = state;
+  const { toggleMenu, closeMenu, handleSignOut } = actions;
 
   return (
     <nav className="bg-zinc-900/80 backdrop-blur-md text-white border-b border-zinc-800/50 sticky top-0 z-50">
@@ -73,7 +68,7 @@ export default function Navigation() {
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={toggleMenu}
               className="text-gray-300 hover:text-white focus:outline-none focus:text-white"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -88,14 +83,14 @@ export default function Navigation() {
               <Link
                 href="/bars"
                 className="block px-3 py-2 text-base font-medium hover:text-purple-400 transition-colors"
-                onClick={() => setIsOpen(false)}
+                onClick={closeMenu}
               >
                 Bars
               </Link>
               <Link
                 href="/search"
                 className="block px-3 py-2 text-base font-medium hover:text-purple-400 transition-colors"
-                onClick={() => setIsOpen(false)}
+                onClick={closeMenu}
               >
                 Search
               </Link>
@@ -103,7 +98,7 @@ export default function Navigation() {
                 <Link
                   href="/recommendations"
                   className="block px-3 py-2 text-base font-medium hover:text-purple-400 transition-colors"
-                  onClick={() => setIsOpen(false)}
+                  onClick={closeMenu}
                 >
                   For You
                 </Link>
@@ -115,7 +110,7 @@ export default function Navigation() {
                     <Link
                       href="/profile"
                       className="block px-3 py-2 text-base font-medium hover:text-purple-400 transition-colors"
-                      onClick={() => setIsOpen(false)}
+                      onClick={closeMenu}
                     >
                       Profile
                     </Link>
@@ -131,14 +126,14 @@ export default function Navigation() {
                     <Link
                       href="/auth/signin"
                       className="block px-3 py-2 text-base font-medium hover:text-purple-400 transition-colors"
-                      onClick={() => setIsOpen(false)}
+                      onClick={closeMenu}
                     >
                       Sign In
                     </Link>
                     <Link
                       href="/auth/signup"
                       className="block px-3 py-2 text-base font-medium hover:text-purple-400 transition-colors"
-                      onClick={() => setIsOpen(false)}
+                      onClick={closeMenu}
                     >
                       Sign Up
                     </Link>

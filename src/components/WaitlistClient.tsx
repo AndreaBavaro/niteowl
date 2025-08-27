@@ -31,7 +31,7 @@ const NiteFinderLogo = ({ className = "w-48 h-48" }: { className?: string }) => 
 
 // Landing View Component
 const LandingView = ({ onTryItOut, onJoinWaitlist }: { onTryItOut: () => void; onJoinWaitlist: () => void }) => (
-  <div className="min-h-screen flex flex-col">
+  <div className="min-h-screen flex flex-col bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900">
     {/* Hero Section */}
     <div className="flex-1 flex items-center justify-center px-4">
       <div className="max-w-4xl mx-auto text-center">
@@ -137,29 +137,30 @@ const LandingView = ({ onTryItOut, onJoinWaitlist }: { onTryItOut: () => void; o
 const PreferencesView = ({ 
   preferenceData, 
   setPreferenceData, 
-  onNext, 
+  onContinue, 
   onBack 
 }: { 
   preferenceData: PreferenceData;
   setPreferenceData: (data: PreferenceData) => void;
-  onNext: () => void;
   onBack: () => void;
+  onContinue: () => void;
 }) => {
   const musicGenres = ['Hip-hop', 'EDM', 'Rap', 'House', 'Jazz', 'City-pop', 'Top 40', 'Pop', 'Mixed/Variety', 'Live bands'];
   const neighborhoods = ['King West', 'Entertainment District', 'Queen West', 'Kensington Market', 'Distillery District', 'Liberty Village', 'Financial District', 'Yorkville'];
 
   const toggleMusicGenre = (genre: string) => {
-    const newGenres = preferenceData.musicGenres.includes(genre)
-      ? preferenceData.musicGenres.filter(g => g !== genre)
-      : [...preferenceData.musicGenres, genre];
-    
-    setPreferenceData({ ...preferenceData, musicGenres: newGenres });
+    setPreferenceData({
+      ...preferenceData,
+      musicGenres: preferenceData.musicGenres.includes(genre)
+        ? preferenceData.musicGenres.filter(g => g !== genre)
+        : [...preferenceData.musicGenres, genre]
+    });
   };
 
   const canProceed = preferenceData.age && preferenceData.neighborhood && preferenceData.musicGenres.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col p-4">
+    <div className="min-h-screen flex flex-col p-4 bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <button onClick={onBack} className="text-neutral-400 hover:text-white transition-colors">
@@ -243,7 +244,7 @@ const PreferencesView = ({
           {/* Next Button */}
           <div className="mt-12 text-center">
             <button
-              onClick={onNext}
+              onClick={onContinue}
               disabled={!canProceed}
               className={`py-4 px-8 rounded-xl font-semibold text-lg transition-all flex items-center gap-3 mx-auto ${
                 canProceed
@@ -271,7 +272,7 @@ const AlgorithmView = ({ onComplete }: { onComplete: () => void }) => {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900">
       <div className="text-center">
         <div className="mb-8">
           <NiteFinderLogo className="w-24 h-24 mx-auto mb-6 animate-pulse" />
@@ -395,7 +396,7 @@ const BarDetailView = ({
   onBack: () => void;
 }) => {
   return (
-    <div className="min-h-screen flex flex-col p-4">
+    <div className="min-h-screen flex flex-col p-4 bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button onClick={onBack} className="text-neutral-400 hover:text-white transition-colors">
@@ -734,7 +735,7 @@ const DemoView = ({
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900">
       {/* Sticky Header with CTA */}
       <div className="sticky top-0 bg-black/90 backdrop-blur-sm border-b border-neutral-800 z-50 p-4">
         <div className="flex items-center justify-between">
@@ -851,7 +852,7 @@ const SignupView = ({
   onBack: () => void;
 }) => {
   return (
-    <div className="min-h-screen flex flex-col p-4">
+    <div className="min-h-screen flex flex-col p-4 bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <button onClick={onBack} className="text-neutral-400 hover:text-white transition-colors">
@@ -1058,7 +1059,7 @@ export default function WaitlistClient() {
         <PreferencesView 
           preferenceData={preferenceData}
           setPreferenceData={setPreferenceData}
-          onNext={() => setCurrentView('algorithm')}
+          onContinue={() => setCurrentView('algorithm')}
           onBack={() => setCurrentView('landing')}
         />
       )}

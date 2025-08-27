@@ -20,12 +20,11 @@ type ViewState = 'landing' | 'preferences' | 'algorithm' | 'demo' | 'signup' | '
 
 // NiteFinder Logo Component
 const NiteFinderLogo = ({ className = "w-48 h-48" }: { className?: string }) => (
-  <Image 
-    src="/logo.png?v=2"
+  <img 
+    src="/logo.png"
     alt="NiteFinder Logo"
-    width={192}
-    height={192}
-    className={className}
+    className={`${className} object-contain`}
+    style={{ maxWidth: '100%', height: 'auto' }}
   />
 );
 
@@ -36,7 +35,7 @@ const LandingView = ({ onTryItOut, onJoinWaitlist }: { onTryItOut: () => void; o
     <div className="flex-1 flex items-center justify-center px-4">
       <div className="max-w-4xl mx-auto text-center">
         <div className="flex flex-col items-center justify-center mb-6">
-          <NiteFinderLogo className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 mb-1" />
+          <NiteFinderLogo className="w-40 h-40 md:w-56 md:h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 mb-2" />
           <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent mb-2 -mt-2">
             NiteFinder
           </h1>
@@ -167,7 +166,7 @@ const PreferencesView = ({
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="flex items-center justify-center">
-          <NiteFinderLogo className="w-16 h-16" />
+          <NiteFinderLogo className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" />
         </div>
         <div className="w-6"></div>
       </div>
@@ -275,7 +274,7 @@ const AlgorithmView = ({ onComplete }: { onComplete: () => void }) => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900">
       <div className="text-center">
         <div className="mb-8">
-          <NiteFinderLogo className="w-24 h-24 mx-auto mb-6 animate-pulse" />
+          <NiteFinderLogo className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 mx-auto mb-6 animate-pulse" />
           <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
         </div>
         
@@ -319,7 +318,7 @@ const SimpleBarDisplay = ({ bars, onBarClick }: { bars: any[]; onBarClick: (bar:
           <ChevronLeft className="w-4 h-4 text-white" />
         </button>
         
-        <span className="text-xs text-neutral-400">
+        <span className="text-sm md:text-base text-neutral-400">
           {currentIndex + 1} of {bars.length}
         </span>
         
@@ -350,30 +349,30 @@ const SimpleBarDisplay = ({ bars, onBarClick }: { bars: any[]; onBarClick: (bar:
         {/* Visible metrics */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-neutral-400">Wait Time</span>
-            <span className="text-white font-medium text-sm">{currentBar.waitTime}</span>
+            <span className="text-sm md:text-base text-neutral-400">Wait Time</span>
+            <span className="text-white font-medium text-base md:text-lg">{currentBar.waitTime}</span>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-xs text-neutral-400">Capacity</span>
-            <span className="text-white font-medium text-sm">{currentBar.capacity}</span>
+            <span className="text-sm md:text-base text-neutral-400">Capacity</span>
+            <span className="text-white font-medium text-base md:text-lg">{currentBar.capacity}</span>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-xs text-neutral-400">Cover</span>
-            <span className="text-white font-medium text-sm">{currentBar.cover}</span>
+            <span className="text-sm md:text-base text-neutral-400">Cover</span>
+            <span className="text-white font-medium text-base md:text-lg">{currentBar.cover}</span>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-xs text-neutral-400">Music</span>
-            <span className="text-white font-medium text-xs">{currentBar.music}</span>
+            <span className="text-sm md:text-base text-neutral-400">Music</span>
+            <span className="text-white font-medium text-sm md:text-base">{currentBar.music}</span>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-xs text-neutral-400">Rating</span>
+            <span className="text-sm md:text-base text-neutral-400">Rating</span>
             <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-yellow-400 fill-current" />
-              <span className="text-white font-medium text-sm">{currentBar.rating}</span>
+              <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 fill-current" />
+              <span className="text-white font-medium text-base md:text-lg">{currentBar.rating}</span>
             </div>
           </div>
         </div>
@@ -403,7 +402,7 @@ const BarDetailView = ({
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="flex flex-col items-center justify-center">
-          <NiteFinderLogo className="w-12 h-12 mb-1" />
+          <NiteFinderLogo className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mb-2" />
           <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
             NiteFinder
           </h1>
@@ -743,7 +742,7 @@ const DemoView = ({
             <ChevronLeft className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-2">
-            <NiteFinderLogo className="w-8 h-8" />
+            <NiteFinderLogo className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16" />
             <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
               NiteFinder
             </h1>
@@ -761,8 +760,8 @@ const DemoView = ({
       {/* Main Content */}
       <div className="flex-1 p-4">
         <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Your Personalized Nightlife</h2>
-          <p className="text-neutral-300">Based on your preferences: {preferenceData.age} • {preferenceData.neighborhood} • {preferenceData.musicGenres.join(", ")}</p>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">Your Personalized Nightlife</h2>
+          <p className="text-lg md:text-xl text-neutral-300">Based on your preferences: {preferenceData.age} • {preferenceData.neighborhood} • {preferenceData.musicGenres.join(", ")}</p>
         </div>
 
         {/* Mobile Section Bubbles */}
@@ -778,7 +777,7 @@ const DemoView = ({
                     : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
                 }`}
               >
-                <div className="text-xs font-medium text-center leading-tight">
+                <div className="text-sm font-medium text-center leading-tight">
                   {section.title === 'For You' && 'For\nYou'}
                   {section.title === 'Patios' && 'Patios'}
                   {section.title === 'No Cover Charge' && 'No\nCover'}
@@ -794,9 +793,9 @@ const DemoView = ({
           <div className="grid grid-cols-4 gap-8 max-w-6xl mx-auto">
             {sections.map((section, sectionIndex) => (
               <div key={section.title} className="flex flex-col max-w-xs">
-                <h3 className="text-lg font-bold text-white mb-4 text-center">
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-4 text-center">
                   {section.title}
-                  <span className="block text-xs text-neutral-400 font-normal">({section.bars.length} matches)</span>
+                  <span className="block text-sm md:text-base text-neutral-400 font-normal">({section.bars.length} matches)</span>
                 </h3>
                 
                 <SimpleBarDisplay bars={section.bars} onBarClick={onBarClick} />
@@ -808,9 +807,9 @@ const DemoView = ({
         {/* Mobile: Single active section */}
         <div className="md:hidden">
           <div className="mb-4">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <h3 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
               {sections[activeSection].title}
-              <span className="text-sm text-neutral-400 font-normal">({sections[activeSection].bars.length} matches)</span>
+              <span className="text-lg md:text-xl text-neutral-400 font-normal">({sections[activeSection].bars.length} matches)</span>
             </h3>
           </div>
           
@@ -859,7 +858,7 @@ const SignupView = ({
           <ChevronLeft className="w-6 h-6" />
         </button>
         <div className="flex items-center justify-center">
-          <NiteFinderLogo className="w-16 h-16" />
+          <NiteFinderLogo className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28" />
         </div>
         <div className="w-6"></div>
       </div>

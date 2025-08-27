@@ -39,7 +39,7 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/((?!waitlist|api/waitlist|_next|favicon.ico|globals.css).*)',
+        source: '/((?!waitlist|test|api/waitlist|_next|favicon.ico|globals.css|logo.png).*)',
         destination: '/waitlist',
         permanent: false,
       },
@@ -54,6 +54,8 @@ const nextConfig = {
   // Image optimization
   images: {
     domains: ['ygubmsjjbpzincalmhjp.supabase.co'],
+    unoptimized: false,
+    formats: ['image/webp', 'image/avif'],
   },
 };
 

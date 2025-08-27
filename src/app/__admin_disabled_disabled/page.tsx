@@ -177,10 +177,10 @@ export default function AdminPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        {user.location_neighbourhood && (
+                        {user.first_neighbourhood && (
                           <div className="flex items-center text-sm text-zinc-300">
                             <MapPin className="w-4 h-4 mr-2 text-blue-400" />
-                            {user.location_neighbourhood}
+                            {user.first_neighbourhood}
                           </div>
                         )}
                         {user.preferred_music && user.preferred_music.length > 0 && (

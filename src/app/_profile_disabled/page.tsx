@@ -1,8 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { User } from '@/lib/types';
-import { getMockUser } from '@/lib/mockData';
-import ProfilePageClient from '@/components/ProfilePageClient';
+import { User } from '../../lib/types';
+import { mockUser } from '../../lib/mock/mockUser';
+import ProfilePageClient from '../../components/ProfilePageClient';
 
 // Server component to get user data
 async function getUserProfile() {
@@ -31,7 +31,7 @@ async function getUserProfile() {
       return baseProfile;
     };
     
-    return getMockUserProfile();
+    return mockUser;
   }
 
   try {

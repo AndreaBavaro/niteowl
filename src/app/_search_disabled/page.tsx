@@ -17,7 +17,7 @@ async function getBars(): Promise<Bar[]> {
         address: '69 Polson St, Toronto, ON',
         description: 'Toronto\'s largest nightclub with world-class DJs.',
         typical_lineup_min: '30+ min',
-        typical_lineup_max: null,
+        typical_lineup_max: undefined,
         cover_frequency: 'Yes-always',
         cover_amount: '$20-30',
         typical_vibe: 'High-energy dance club',

@@ -15,13 +15,16 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.3",
+    "autoprefixer": "^10.4.20",
     "clsx": "^2.1.1",
     "dotenv": "^17.0.1",
     "lucide-react": "^0.525.0",
     "next": "15.3.5",
+    "postcss": "^8.4.49",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.0.0-alpha.26",
     "zod": "^3.25.75"
   },
   "devDependencies": {
@@ -30,11 +33,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^4.0.0-alpha.26",
     "tsx": "^4.19.2",
     "typescript": "^5"
   }

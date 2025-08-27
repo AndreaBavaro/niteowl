@@ -27,18 +27,15 @@ const nextConfig = {
     ];
   },
   
-  // Redirect configuration for production
+  // Redirect configuration - always redirect to waitlist
   async redirects() {
-    if (process.env.NODE_ENV === 'production') {
-      return [
-        {
-          source: '/((?!waitlist|api/waitlist|_next|favicon.ico).*)',
-          destination: '/waitlist',
-          permanent: false,
-        },
-      ];
-    }
-    return [];
+    return [
+      {
+        source: '/((?!waitlist|api/waitlist|_next|favicon.ico|globals.css).*)',
+        destination: '/waitlist',
+        permanent: false,
+      },
+    ];
   },
 
   // Environment variables validation

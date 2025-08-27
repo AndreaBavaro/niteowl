@@ -1,10 +1,10 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import getSupabaseBrowserClient from '@/lib/supabase/client';
+import getSupabaseBrowserClient from '../lib/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { UserProfile, MusicGenre } from '@/lib/types';
-import { mockUser } from '@/lib/mock/mockUser';
+import { UserProfile, MusicGenre } from '../lib/types';
+import { mockUser } from '../lib/mock/mockUser';
 
 interface AuthContextType {
   user: UserProfile | null;

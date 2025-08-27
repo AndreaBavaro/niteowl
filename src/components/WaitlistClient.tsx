@@ -743,7 +743,7 @@ const DemoView = ({
           </button>
           <div className="flex items-center gap-2">
             <NiteFinderLogo className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16" />
-            <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
               NiteFinder
             </h1>
           </div>

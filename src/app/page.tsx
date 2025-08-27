@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Clock, DollarSign, Users, ArrowRight } from 'lucide-react';
-import FeaturedBars, { FeaturedBarsSkeleton } from '@/components/FeaturedBars';
+import FeaturedBars, { FeaturedBarsSkeleton } from '../components/FeaturedBars';
 
 function HomePage() {
   return (

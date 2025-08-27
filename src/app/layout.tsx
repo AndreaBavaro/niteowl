@@ -1,4 +1,4 @@
-import ClientProviders from '@/components/ClientProviders';
+import ClientProviders from '../components/ClientProviders';
 import './globals.css';
 import { Nunito } from 'next/font/google'
 

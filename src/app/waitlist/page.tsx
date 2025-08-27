@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import WaitlistClient from '@/components/WaitlistClient';
+import WaitlistClient from '../../components/WaitlistClient';
 
 export const metadata: Metadata = {
   title: 'Join the Waitlist | NiteFinder',

@@ -1,12 +1,28 @@
 import ClientProviders from '../components/ClientProviders';
-import './globals.css';
-import { Nunito } from 'next/font/google'
+import type { Metadata } from "next";
+import localFont from "next/font/local";
+import "./globals.css";
 
-const nunito = Nunito({ 
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-nunito',
+const geistSans = localFont({
+  src: "./fonts/GeistVF.woff2",
+  variable: "--font-geist-sans",
+  weight: "100 900",
 });
+const geistMono = localFont({
+  src: "./fonts/GeistMonoVF.woff2",
+  variable: "--font-geist-mono",
+  weight: "100 900",
+});
+
+export const metadata: Metadata = {
+  title: "NiteFinder - Toronto's Smartest Nightlife Platform",
+  description: "Discover your perfect night out with personalized venue recommendations, real-time wait times, and exclusive rewards in Toronto.",
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
+};
 
 export default function RootLayout({
   children,
@@ -15,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${nunito.variable} font-sans antialiased bg-neutral-900 text-white`}>
+      <body className={`${geistSans.variable} font-sans antialiased bg-neutral-900 text-white`}>
         <ClientProviders>
           {children}
         </ClientProviders>

@@ -108,7 +108,7 @@ const convertBarToVenueCardProps = (bar: Bar, getBarImage: (barName: string) => 
     partnerBookingUrl: bar.booking_url,
     directionsUrl: `https://maps.google.com/?q=${encodeURIComponent(bar.address || bar.name + ' ' + bar.neighbourhood)}`,
     isFavorite: false, // TODO: Connect to favorites system
-    onToggleFavorite: (id: string) => console.log('Toggle favorite:', id),
+    onToggleFavorite: (id: string) => {/* Favorite functionality not implemented */},
     onOpenDetails: (id: string) => window.location.href = `/bar/${bar.slug}`
   };
 };
@@ -255,7 +255,7 @@ export default function ForYouPageClient({ user, initialRecommendations }: ForYo
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
         categoryCounts={categoryCounts}
-        onFiltersClick={() => console.log('Open filters modal')}
+        onFiltersClick={() => {/* Filters modal not implemented */}}
         hasActiveFilters={hasActiveFilters}
       />
 

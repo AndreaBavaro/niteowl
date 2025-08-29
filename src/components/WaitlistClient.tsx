@@ -8,6 +8,7 @@ interface FormData {
   name: string;
   email: string;
   phone: string;
+  referralCode: string;
 }
 
 interface PreferenceData {
@@ -917,6 +918,21 @@ const SignupView = ({
               </div>
             </div>
 
+            <div>
+              <div className="relative">
+                <Gift className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                <input
+                  type="text"
+                  name="referralCode"
+                  value={formData.referralCode}
+                  onChange={handleInputChange}
+                  className="w-full pl-12 pr-4 py-4 bg-neutral-800 border border-neutral-600 rounded-xl text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"
+                  placeholder="Referral code (optional)"
+                />
+              </div>
+              <p className="text-xs text-neutral-500 mt-2">Have a referral code? Enter it to move up the waitlist!</p>
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -958,7 +974,12 @@ const SignupView = ({
 
 export default function WaitlistClient() {
   const [currentView, setCurrentView] = useState<ViewState>('landing');
-  const [formData, setFormData] = useState<FormData>({ name: '', email: '', phone: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    referralCode: ''
+  });
   const [preferenceData, setPreferenceData] = useState<PreferenceData>({ 
     age: '', 
     neighborhood: '', 
@@ -967,13 +988,60 @@ export default function WaitlistClient() {
   const [selectedBar, setSelectedBar] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+
+  const formatPhoneNumber = (value: string) => {
+    const phoneDigits = value.replace(/\D/g, '');
+    
+    if (phoneDigits.length <= 3) {
+      return phoneDigits;
+    } else if (phoneDigits.length <= 6) {
+      return `${phoneDigits.slice(0, 3)}-${phoneDigits.slice(3)}`;
+    } else if (phoneDigits.length <= 10) {
+      return `${phoneDigits.slice(0, 3)}-${phoneDigits.slice(3, 6)}-${phoneDigits.slice(6)}`;
+    } else {
+      // Handle 11 digits (with country code)
+      const tenDigits = phoneDigits.startsWith('1') ? phoneDigits.slice(1) : phoneDigits.slice(0, 10);
+      return `${tenDigits.slice(0, 3)}-${tenDigits.slice(3, 6)}-${tenDigits.slice(6)}`;
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name === 'phone') {
+      const formattedPhone = formatPhoneNumber(value);
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedPhone
+      }));
+    } else if (name === 'name') {
+      // Sanitize name input - remove potentially dangerous characters
+      const sanitizedName = value.replace(/[<>\"'&]/g, '').slice(0, 100);
+      setFormData(prev => ({
+        ...prev,
+        [name]: sanitizedName
+      }));
+    } else if (name === 'email') {
+      // Basic email sanitization
+      const sanitizedEmail = value.replace(/[<>\"'&]/g, '').slice(0, 254);
+      setFormData(prev => ({
+        ...prev,
+        [name]: sanitizedEmail
+      }));
+    } else if (name === 'referralCode') {
+      // Only allow alphanumeric characters for referral codes
+      const sanitizedCode = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+      setFormData(prev => ({
+        ...prev,
+        [name]: sanitizedCode
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleTryItOut = () => {
@@ -1006,6 +1074,7 @@ export default function WaitlistClient() {
           age: preferenceData.age,
           neighborhood: preferenceData.neighborhood,
           musicGenres: preferenceData.musicGenres,
+          referredBy: formData.referralCode,
         }),
       });
 
@@ -1013,7 +1082,8 @@ export default function WaitlistClient() {
 
       if (response.ok) {
         setSubmitSuccess(true);
-        setFormData({ name: '', email: '', phone: '' });
+        setReferralCode(result.data?.referral_code || '');
+        setFormData({ name: '', email: '', phone: '', referralCode: '' });
       } else {
         console.error('Failed to submit form:', result.error);
         alert(result.error || 'Failed to join waitlist. Please try again.');
@@ -1037,9 +1107,32 @@ export default function WaitlistClient() {
           <p className="text-neutral-300 text-lg mb-6">
             You're on the waitlist. We'll notify you when we launch.
           </p>
-          <p className="text-sm text-neutral-400">
-            Share your referral code to move up the list and earn rewards.
+          
+          {referralCode && (
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg p-6 mb-6">
+              <h3 className="text-white font-bold text-lg mb-2">🎁 Your Referral Code</h3>
+              <div className="bg-white/20 rounded-lg p-4 mb-3">
+                <span className="text-white font-mono text-2xl font-bold tracking-wider">{referralCode}</span>
+              </div>
+              <p className="text-purple-100 text-sm">
+                Share this code with friends to move up the waitlist and earn rewards!
+              </p>
+            </div>
+          )}
+          
+          <p className="text-sm text-neutral-400 mb-4">
+            Check your email for your welcome message and referral code.
           </p>
+          
+          <button
+            onClick={() => {
+              setSubmitSuccess(false);
+              setCurrentView('landing');
+            }}
+            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+          >
+            Back to Home
+          </button>
         </div>
       </div>
     );

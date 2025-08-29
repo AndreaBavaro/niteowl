@@ -266,7 +266,7 @@ const CategoryDisplay: React.FC<CategoryDisplayProps> = ({
                     }`} />
                   </button>
                   <button 
-                    onClick={() => console.log('Share venue:', venues[currentIndex].id)}
+                    onClick={() => {/* Share functionality not implemented */}}
                     className="p-2 bg-black/50 hover:bg-black/70 rounded-full backdrop-blur-sm transition-all duration-200"
                   >
                     <Share2 className="w-4 h-4 text-white" />
@@ -449,9 +449,9 @@ const CategoryDisplay: React.FC<CategoryDisplayProps> = ({
                 <div key={venue.id} className="relative group">
                   <VenueCardExpanded 
                     venue={venue}
-                    onToggleFavorite={(id) => console.log('Toggle favorite:', id)}
-                    onGetDirections={(id) => console.log('Get directions:', id)}
-                    onShare={(id) => console.log('Share venue:', id)}
+                    onToggleFavorite={(id) => {/* Favorite functionality not implemented */}}
+                    onGetDirections={(id) => {/* Directions functionality not implemented */}}
+                    onShare={(id) => {/* Share functionality not implemented */}}
                   />
                 
                 {/* Hide Button */}
